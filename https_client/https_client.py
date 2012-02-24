@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-__version__ = "2012-02-14"
 """Blocking HTTP client with support for client authentication over SSL.
 
 Example:
@@ -20,7 +19,11 @@ import cStringIO as StringIO
 import pycurl
 
 ACCEPT_HEADER = "*/*"  # Default Accept header
-METHOD = ['POST', 'PUT', 'GET', 'HEAD', 'DELETE']
+#METHOD = ['POST', 'PUT', 'GET', 'HEAD', 'DELETE']
+METHOD = {'POST': (pycurl.POST, 1),
+          'PUT': (pycurl.PUT, 1),
+          'GET': (pycurl.HTTPGET, 1),
+          'DELETE': (pycurl.CUSTOMREQUEST, 'DELETE')}
 DEBUG = False
 
 
@@ -38,10 +41,11 @@ def progress(download_t, download_d, upload_t, upload_d):
 class Request(object):
     def __init__(self, url, method, headers=None, body=""):
         self.curl = pycurl.Curl()
-        self.curl.setopt(pycurl.DEBUGFUNCTION, debug)
-        self.curl.setopt(pycurl.VERBOSE, 1)
+        if DEBUG:
+            self.curl.setopt(pycurl.DEBUGFUNCTION, debug)
+            self.curl.setopt(pycurl.VERBOSE, 1)
         assert method in METHOD, "Unsupported method (must be upper case)"
-        self.curl.setopt(pycurl.CUSTOMREQUEST, method)
+        self.curl.setopt(*METHOD[method])
         self.curl.setopt(pycurl.URL, url)
         #self.curl.setopt(pycurl.PROGRESSFUNCTION, progress)
         self.headers = headers if headers else dict()
@@ -80,12 +84,11 @@ class Request(object):
 
     def _set_body(self):
         fp = StringIO.StringIO(self.body)
-        #print fp.read()
         self.curl.setopt(pycurl.READFUNCTION, fp.read)
 
     def send(self):
         self._set_headers()
-        #if self.body:
+        #self.curl.setopt(pycurl.NOBODY, 0)
         self._set_body()
         res = Response()
         self.curl.setopt(pycurl.HEADERFUNCTION, res._header_callback)
@@ -110,9 +113,11 @@ class Response(object):
         self.headers = dict()
 
     def _body_callback(self, chunk):
+        #print "_bc: %s" % chunk
         self._chunks.append(chunk)
 
     def _header_callback(self, header):
+        #print "_hc: %s" % header
         header = header.rstrip()  # Remove trailing \r\n
         if not header:
             return

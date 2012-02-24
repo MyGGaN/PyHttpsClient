@@ -1,0 +1,11 @@
+*.pyc
+*~
+*_
+*.log
+
+dist
+target
+*.egg
+*.egg-info
+MANIFEST
+root/
