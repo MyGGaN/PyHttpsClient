@@ -19,6 +19,12 @@ class GeneralHandler(tornado.web.RequestHandler):
     def get(self):
         pass
 
+    def delete(self):
+        pass
+
+    def put(self):
+        pass
+
     def post(self):
         """..."""
         log.error("aaa")

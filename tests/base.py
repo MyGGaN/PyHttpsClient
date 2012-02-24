@@ -16,21 +16,25 @@ client.DEBUG = False
 
 log = logging.getLogger()
 
-assert os.path.exists("mock_server.py"), \
-        "You have to be in tests/ to find the mock_server.py"
+if os.path.exists("tests/mock_server.py"):
+    mock_path = "tests/mock_server.py"
+elif os.path.exists("mock_server.py"):
+    mock_path = "mock_server.py"
+else:
+    assert False, "Couldn't find (tests/)mock_server.py"
 
 
 class Server():
     def __init__(self, port):
         self.host = "http://127.0.0.1:%d" % port
         self.child = subprocess.Popen(
-                ("python mock_server.py %d" % port).split(),
+                ("python %s %d" % (mock_path, port)).split(),
                 stdout=subprocess.PIPE)
         # Ensure server is up
         time.sleep(.2)
         req = client.Request("%s/ping" % self.host, "GET")
         res = req.send()
-        assert res and res.status == 200, "mock server didn't start."
+        assert res and res.status == 200, "mock_server didn't start."
 
     def kill(self):
         """Terminates the mock process, GET /admin/shutdown works too."""
@@ -38,7 +42,6 @@ class Server():
 
 
 class ServerTest(unittest.TestCase):
-
     @classmethod
     def setup_class(cls):
         pass
