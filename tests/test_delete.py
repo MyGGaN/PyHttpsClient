@@ -3,7 +3,6 @@
 
 #-- stdlib imports
 import logging
-import nose
 import unittest
 
 #-- package imports
@@ -15,7 +14,6 @@ log = logging.getLogger()
 
 
 class TestHttpDelete(base.ServerTest):
-    @nose.tools.timed(1)
     def test_delete(self):
         req = client.Request(self.server.host, "DELETE")
         res = req.send()

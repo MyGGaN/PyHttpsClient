@@ -2,6 +2,7 @@
 
 #-- stdlib imports
 import logging
+import json
 import sys
 
 #-- third party import
@@ -16,21 +17,21 @@ log = logging.getLogger()
 
 #------------------------------------------------------------- HTTP Handlers --#
 class GeneralHandler(tornado.web.RequestHandler):
+    def _debug_info(self):
+        return json.dumps({'headers': self.request.headers,
+                           'body': self.request.body})
+
     def get(self):
-        pass
+        self.write(self._debug_info())
 
     def delete(self):
-        pass
+        self.write(self._debug_info())
 
     def put(self):
-        pass
+        self.write(self._debug_info())
 
     def post(self):
-        """..."""
-        log.error("aaa")
-        log.debug("headers: %s" % self.request.headers)
-        log.debug("body: %s" % self.request.body)
-        self.write("post")
+        self.write(self._debug_info())
 # END GeneralHandler
 
 
