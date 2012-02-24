@@ -14,12 +14,18 @@ logging.basicConfig(filename='test.log', level=logging.DEBUG)
 log = logging.getLogger()
 
 
-class TestHttpDelete(base.ServerTest):
+class TestHttpPut(base.ServerTest):
     @nose.tools.timed(1)
-    def test_delete(self):
-        req = client.Request(self.server.host, "DELETE")
+    def test_put_no_body(self):
+        req = client.Request(self.server.host, "PUT")
         res = req.send()
-        assert res.status == 200, "Failed to post"
+        assert res.status == 200, "Failed to put"
+
+    @nose.tools.timed(1)
+    def test_put_with_body(self):
+        req = client.Request(self.server.host, "PUT", body="123")
+        res = req.send()
+        assert res.status == 200, "Failed to put"
 
 if __name__ == '__main__':
     unittest.main()
