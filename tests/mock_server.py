@@ -3,6 +3,7 @@
 #-- stdlib imports
 import logging
 import json
+import socket
 import sys
 
 #-- third party import
@@ -62,12 +63,29 @@ if __name__ == "__main__":
         print "Port number must be an int."
         exit(1)
     except IndexError:
-        print "Port number are required; eg. 'mp_mock.py 80'"
+        print "Port number are required; eg. 'mp_mock.py 8080'"
         exit(1)
-    assert 0 < port <= 65535, "Usage: 'mock_server.py 80' for a mock on port 80."
+    assert 0 < port <= 65535, \
+            "Usage: 'mock_server.py 8080' for a mock on port 8080."
 
-    server = tornado.httpserver.HTTPServer(Application())
-    server.listen(port, "")
+    ssl_options = None
+    try:
+        if sys.argv[2] == "ssl":
+            ssl_options = {"certfile": "../cert/server.crt",
+                           "keyfile": "../cert/server.key"}
+    except IndexError:
+        pass
+
+    if ssl_options:
+        server = tornado.httpserver.HTTPServer(Application(),
+                                               ssl_options=ssl_options)
+    else:
+        server = tornado.httpserver.HTTPServer(Application())
+    try:
+        server.listen(port, "")
+    except socket.error, e:
+        log.error(e)
+        exit(1)
 
     ioloop = tornado.ioloop.IOLoop.instance()
     log.info("mock server on port %d" % port)

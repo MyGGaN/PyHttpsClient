@@ -12,7 +12,7 @@ import os
 import https_client.https_client as client
 
 PORT = 8080
-client.DEBUG = False
+client.DEBUG = True
 
 log = logging.getLogger()
 
@@ -25,14 +25,18 @@ else:
 
 
 class Server():
-    def __init__(self, port):
-        self.host = "http://127.0.0.1:%d" % port
-        self.child = subprocess.Popen(
-                ("python %s %d" % (mock_path, port)).split(),
-                stdout=subprocess.PIPE)
+    def __init__(self, port, ssl=False):
+        schema = "https" if ssl else "http"
+        self.host = "%s://127.0.0.1:%d" % (schema, port)
+        cmd = "python %s %d" % (mock_path, port)
+        if ssl:
+            cmd += " ssl"
+        self.child = subprocess.Popen((cmd).split(), stdout=subprocess.PIPE)
         # Ensure server is up
         time.sleep(.2)
         req = client.Request("%s/ping" % self.host, "GET")
+        if ssl:
+            req.ssl(cainfo="../cert/ca.crt")
         res = req.send()
         assert res and res.status == 200, "mock_server didn't start."
 
@@ -54,6 +58,26 @@ class ServerTest(unittest.TestCase):
         pass
 
     def tearDown(self):
+        if hasattr(self, 'server'):
+            log.debug("killing server")
+            self.server.kill()
+
+
+class ServerTestSSL(unittest.TestCase):
+    @classmethod
+    def setup_class(cls):
+        pass
+
+    def setUp(self):
+        self.server = Server(PORT, True)
+
+    @classmethod
+    def teardown_class(cls):
+        log.info(1)
+        pass
+
+    def tearDown(self):
+        log.info(2)
         if hasattr(self, 'server'):
             log.debug("killing server")
             self.server.kill()

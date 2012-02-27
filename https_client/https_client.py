@@ -51,7 +51,7 @@ class Request(object):
         self.headers = headers if headers else dict()
         self.body = body
 
-    def ssl(self, cainfo=None, verify=None, cert=None, key=None):
+    def ssl(self, cainfo=None, verify=True, cert=None, key=None):
         """Will let you configure some ssl parameters.
 
         cainfo - path to the CA cert for the server
