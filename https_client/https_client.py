@@ -105,7 +105,8 @@ class Request(object):
         if hasattr(self.body, 'read') and hasattr(self.body, 'close'):
             self.curl.setopt(pycurl.READFUNCTION, self.body.read)
         else:
-            self.curl.setopt(pycurl.READFUNCTION, StringIO.StringIO(self.body))
+            self.curl.setopt(pycurl.READFUNCTION,
+                             StringIO.StringIO(self.body).read)
 
     def send(self):
         self._set_headers()
