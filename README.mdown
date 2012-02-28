@@ -1,0 +1,73 @@
+PyHttpsClient
+=============
+
+Simple to use, blocking HTTP client with support for client authentication over 
+SSL. Just drop the https_client.py in your project and hack away.
+
+This free software comes without any warranty.
+
+
+Installation
+============
+
+You may either install the https_client or simply include the file in your
+project.
+
+
+Usage
+=====
+Example 1: POST request over SSL with client authentication and server 
+validation against a CA certificate
+
+	from https_client import Request
+
+    url = "https://example.com/test"
+    body = json.dumps({"foo": "bar", "spam": "egg"})
+    headers = {'Content-Type': "application/json"}
+
+    req = Request(url, 'POST', headers=headers, body=body)
+    req.ssl(cainfo="ca.crt", verify=True, cert="client.crt", key="client.key")
+    res = req.send()
+    if res:
+        print res.version, res.status, res.reason
+        print res.headers
+        print res.body
+
+
+Example 2: Verbose logging and file upload
+
+	import https_client
+	import logging
+
+	https_client.DEBUG = True
+	logging.basicConfig(filename="test.log", level=logging.DEBUG)
+	log = logging.getLogger()
+
+	url = "http://127.0.0.1:8080"
+	headers = {'Content-Type': "plain/text"}
+	body = open("the_Holy_Grail.txt", 'rb')
+	req = https_client.Request(url, 'POST', body=body)
+	res = req.send()
+
+
+Exaple 3: Simple file upload
+
+	import https_client
+
+	url = "http://127.0.0.1:8080"
+	req = https_client.Request(url, "POST")
+	req.post_files([('Graham_Chapman.png', 'me.png')])
+	res = req.send()
+
+
+TODOS
+=====
+
+* Fix progress_callback()
+* Add test cases for file upload
+
+
+Report Issues/Bugs
+==================
+Drop me a message explaining what's bothering you or simply fork and make a 
+pull request.

@@ -16,10 +16,13 @@ Example:
 """
 
 import cStringIO as StringIO
+import logging
 import pycurl
+import os
+
+log = logging.getLogger()
 
 ACCEPT_HEADER = "*/*"  # Default Accept header
-#METHOD = ['POST', 'PUT', 'GET', 'HEAD', 'DELETE']
 METHOD = {'POST': (pycurl.POST, 1),
           'PUT': (pycurl.PUT, 1),
           'GET': (pycurl.HTTPGET, 1),
@@ -27,27 +30,18 @@ METHOD = {'POST': (pycurl.POST, 1),
 DEBUG = False
 
 
-def debug(debug_type, debug_msg):
-    print "debug(%d): %s" % (debug_type, debug_msg)
-
-
-def progress(download_t, download_d, upload_t, upload_d):
-    print "Total to download", download_t
-    print "Total downloaded", download_d
-    print "Total to upload", upload_t
-    print "Total uploaded", upload_d
-
-
 class Request(object):
     def __init__(self, url, method, headers=None, body=""):
         self.curl = pycurl.Curl()
         if DEBUG:
-            self.curl.setopt(pycurl.DEBUGFUNCTION, debug)
+            self.curl.setopt(pycurl.DEBUGFUNCTION, self._debug)
             self.curl.setopt(pycurl.VERBOSE, 1)
-        assert method in METHOD, "Unsupported method (must be upper case)"
-        self.curl.setopt(*METHOD[method])
+        try:
+            self.curl.setopt(*METHOD[method])
+        except KeyError:
+            log.error("Unsupported method (must be upper case)")
+            raise
         self.curl.setopt(pycurl.URL, url)
-        #self.curl.setopt(pycurl.PROGRESSFUNCTION, progress)
         self.headers = headers if headers else dict()
         self.body = body
 
@@ -73,30 +67,57 @@ class Request(object):
         if key:
             self.curl.setopt(pycurl.SSLKEY, key)
 
+    def progress_callback(self, func):
+        """Set up a callback function to track progress.
+
+        def progress(download_t, download_d, upload_t, upload_d):
+            print "Total to download", download_t
+            print "Total downloaded", download_d
+            print "Total to upload", upload_t
+            print "Total uploaded", upload_d
+        """
+        self.curl.setopt(pycurl.PROGRESSFUNCTION, func)
+
+    def post_files(self, file_list):
+        """Craft a multipart/formdata HTTP POST.
+
+        file_list -- [("file1_name", "file1_path"), ...]
+        """
+        self.body = None  # Disable general body to be sent
+        f_list = map(lambda f: (f[0], (pycurl.FORM_FILE, f[1])), file_list)
+        self.curl.setopt(pycurl.HTTPPOST, f_list)
+
+    def _debug(self, debug_type, debug_msg):
+        log.debug("debug(%d): %s" % (debug_type, debug_msg))
+
     def _set_headers(self):
-        self.headers['Content-Length'] = len(self.body)
+        if type(self.body) == str:
+            self.headers['Content-Length'] = len(self.body)
+        elif hasattr(self.body, 'fileno'):
+            self.headers['Content-Length'] = os.fstat(self.body.fileno())[6]
         if not 'Accept' in self.headers:
             self.headers['Accept'] = ACCEPT_HEADER
-        #self.headers['Expect'] = "100-continue"
-        headers = map(lambda key: "%s: %s" % (key, self.headers[key]),
-                      self.headers.keys())
-        self.curl.setopt(pycurl.HTTPHEADER, headers)
+        self.curl.setopt(pycurl.HTTPHEADER,
+                         map(lambda key: "%s: %s" % (key, self.headers[key]),
+                             self.headers.keys()))
 
     def _set_body(self):
-        fp = StringIO.StringIO(self.body)
-        self.curl.setopt(pycurl.READFUNCTION, fp.read)
+        if hasattr(self.body, 'read') and hasattr(self.body, 'close'):
+            self.curl.setopt(pycurl.READFUNCTION, self.body.read)
+        else:
+            self.curl.setopt(pycurl.READFUNCTION, StringIO.StringIO(self.body))
 
     def send(self):
         self._set_headers()
-        #self.curl.setopt(pycurl.NOBODY, 0)
-        self._set_body()
+        if self.body != None:
+            self._set_body()
         res = Response()
         self.curl.setopt(pycurl.HEADERFUNCTION, res._header_callback)
         self.curl.setopt(pycurl.WRITEFUNCTION, res._body_callback)
         try:
             self.curl.perform()
         except pycurl.error, msg:
-            debug(*msg)
+            log.debug(*msg)
             return None
         res.status = self.curl.getinfo(pycurl.HTTP_CODE)
         self.curl.close()
