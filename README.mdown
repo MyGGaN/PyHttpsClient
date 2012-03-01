@@ -65,6 +65,8 @@ TODOS
 
 * Fix progress_callback()
 * Add test cases for file upload
+* Make Response headers case insesitive
+* Seems it doesn'ä't support large requests over SSL
 
 
 Report Issues/Bugs
