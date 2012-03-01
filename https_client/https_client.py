@@ -31,7 +31,8 @@ DEBUG = False
 
 
 class Request(object):
-    def __init__(self, url, method, headers=None, body=""):
+    def __init__(self, url, method, headers=None, body=None):
+        body = body or ""
         self.curl = pycurl.Curl()
         if DEBUG:
             self.curl.setopt(pycurl.DEBUGFUNCTION, self._debug)
@@ -97,9 +98,12 @@ class Request(object):
             self.headers['Content-Length'] = os.fstat(self.body.fileno())[6]
         if not 'Accept' in self.headers:
             self.headers['Accept'] = ACCEPT_HEADER
-        self.curl.setopt(pycurl.HTTPHEADER,
-                         map(lambda key: "%s: %s" % (key, self.headers[key]),
-                             self.headers.keys()))
+        try:
+            self.curl.setopt(pycurl.HTTPHEADER,
+                             map(lambda key: "%s: %s" % (key, self.headers[key]), self.headers.keys()))
+        except TypeError:
+            log.error("Failed to set headers")
+            raise
 
     def _set_body(self):
         if hasattr(self.body, 'read') and hasattr(self.body, 'close'):
