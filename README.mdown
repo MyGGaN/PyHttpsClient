@@ -1,7 +1,7 @@
 PyHttpsClient
 =============
 
-Simple to use, blocking HTTP client with support for client authentication over 
+Simple to use, blocking HTTP client with support for client authentication over
 SSL. Just drop the https_client.py in your project and hack away.
 
 This free software comes without any warranty.
@@ -16,14 +16,14 @@ project.
 
 Usage
 =====
-Example 1: POST request over SSL with client authentication and server 
+Example 1: POST request over SSL with client authentication and server
 validation against a CA certificate
 
 	from https_client import Request
 
     url = "https://example.com/test"
-    body = json.dumps({"foo": "bar", "spam": "egg"})
     headers = {'Content-Type': "application/json"}
+    body = json.dumps({"foo": "bar", "spam": "egg"})
 
     req = Request(url, 'POST', headers=headers, body=body)
     req.ssl(cainfo="ca.crt", verify=True, cert="client.crt", key="client.key")
@@ -66,10 +66,10 @@ TODOS
 * Fix progress_callback()
 * Add test cases for file upload
 * Make Response headers case insesitive
-* Seems it doesn'ä't support large requests over SSL
+* Seems it doesn't support large requests over SSL (chunking problems?)
 
 
 Report Issues/Bugs
 ==================
-Drop me a message explaining what's bothering you or simply fork and make a 
+Drop me a message explaining what's bothering you or simply fork and make a
 pull request.
