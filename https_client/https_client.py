@@ -110,7 +110,7 @@ class Request(object):
             self.curl.setopt(pycurl.READFUNCTION, self.body.read)
         else:
             self.curl.setopt(pycurl.READFUNCTION,
-                             StringIO.StringIO(self.body).read)
+                             StringIO.StringIO(str(self.body)).read)
 
     def send(self):
         self._set_headers()
