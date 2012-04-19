@@ -92,7 +92,7 @@ class Request(object):
         log.debug("debug(%d): %s" % (debug_type, debug_msg))
 
     def _set_headers(self):
-        if type(self.body) == str:
+        if type(self.body) == (str, unicode):
             self.headers['Content-Length'] = len(self.body)
         elif hasattr(self.body, 'fileno'):
             self.headers['Content-Length'] = os.fstat(self.body.fileno())[6]
@@ -122,7 +122,7 @@ class Request(object):
         try:
             self.curl.perform()
         except pycurl.error, msg:
-            log.debug(*msg)
+            log.error(*msg)
             return None
         res.status = self.curl.getinfo(pycurl.HTTP_CODE)
         self.curl.close()
