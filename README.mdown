@@ -67,6 +67,7 @@ TODOS
 * Add test cases for file upload
 * Make Response headers case insesitive
 * Seems it doesn't support large requests over SSL (chunking problems?)
+* Add HTTP headers according to http://www.internetfilter.com/w/articles/http_methods_and_proxies
 
 
 Report Issues/Bugs
